@@ -6,17 +6,17 @@ title: Reference
 Reference information on various areas of ScopeDB.
 
 
-[**Data type reference**](/reference/data-types)
-: Reference for ScopeQL data types.
+## [**Data type reference**](/reference/data-types)
+Reference for ScopeQL data types.
 
 ---
 
-[**Command reference**](/reference/commands)
-: Reference for ScopeQL commands.
+## [**Command reference**](/reference/commands)
+Reference for ScopeQL commands.
 
 ---
 
-[**Function reference**](/reference/functions)
-: Reference for ScopeQL functions.
+## [**Function reference**](/reference/functions)
+Reference for ScopeQL functions.
 
 ---

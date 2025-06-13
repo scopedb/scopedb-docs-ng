@@ -1,46 +1,41 @@
 ---
 import Categories from "@/src/components/Categories.astro";
 import Search from "./Search/";
+import type { SidebarItem } from '@/src/libs/sidebar';
+
+interface Props {
+  sidebar?: SidebarItem[];
+}
+
+const { sidebar } = Astro.props;
 ---
 
-<div>
-  <div class="flex">
-    <div class="title-wrapper flex items-center gap-[24px]">
-      <a href="/" class="flex items-center gap-[12px]">
-        <img src="/logo.svg" alt="ScopeDB Logo" class="h-[28px] w-[28px]" />
-        <div class="text-[20px] text-[#000000] font-[600]">ScopeDB</div>
-        <div
-          class="text-[16px] pl-[12px] md:pl-[24px] text-[rgba(0,0,0,0.80)] font-[600]"
-        >
-          DOCUMENTATION
-        </div>
-      </a>
-    </div>
-
-    <div class="flex-1"></div>
-    <div class="flex items-center gap-[16px]">
-      <div class="hidden sm:block text-[14px]">
-        <div><a href="https://www.scopedb.io/contact">Book a demo</a></div>
+<div class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-[rgba(0,0,0,0.03)]">
+  {/* 样式: 固定顶部导航 - 半透明背景，模糊效果 */}
+  <div class="max-w-[1440px] mx-auto pt-[14px] px-[12px] md:px-[24px]">
+    <div class="flex pb-[14px] items-center justify-between border-b border-[rgba(0,0,0,0.03)] ">
+      <div class="title-wrapper flex items-center gap-[24px] ">
+        {/* 样式: 左侧标题和Logo */}
+        <a href="/" class="flex items-center gap-[12px]">
+          <img src="/logo.svg" alt="ScopeDB Logo" class="h-[28px] w-[28px]" />
+          <div class="text-[20px] text-[#000000] font-medium">ScopeDB</div>
+          <div
+            class="text-[16px] pl-[12px] md:pl-[16px] text-[rgba(0,0,0,0.80)] font-medium "
+          >
+            DOCUMENTATION
+          </div>
+        </a>
       </div>
-      <Search client:only="react"/>
+
+      <div class="flex-1"></div>
+      <div class="flex items-center gap-[16px]">
+        <div class="hidden sm:block text-[14px]">
+          <div><a href="https://www.scopedb.io/contact">Book a demo</a></div>
+        </div>
+        <Search client:only="react"/>
+      </div>
     </div>
+
+    <Categories sidebar={sidebar} />
   </div>
-
-  <Categories />
 </div>
-<style>
-  .header {
-    justify-content: space-between;
-    align-items: center;
-    height: 100%;
-  }
-
-  .title-wrapper {
-    /* Prevent long titles overflowing and covering the search and menu buttons on narrow viewports. */
-    overflow: clip;
-    /* Avoid clipping focus ring around link inside title wrapper. */
-    padding: 0.25rem;
-    margin: -0.25rem;
-    min-width: 0;
-  }
-</style>

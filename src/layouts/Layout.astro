@@ -3,9 +3,14 @@ import "@/src/styles/global.css";
 import Footer from "@/src/components/Footer.astro";
 import Header from "@/src/components/Header.astro";
 import { ClientRouter } from "astro:transitions";
+import type { SidebarItem } from '@/src/libs/sidebar';
 
+interface Props {
+  title: string;
+  sidebar?: SidebarItem[];
+}
 
-const { title } = Astro.props;
+const { title, sidebar } = Astro.props;
 ---
 
 <!doctype html>
@@ -15,32 +20,19 @@ const { title } = Astro.props;
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
     <title>{title}</title>
     <ClientRouter/>
   </head>
-  <body>
+  <body class="min-h-screen flex flex-col">
     <header>
-      <Header />
+      <Header sidebar={sidebar} />
     </header>
-    <main>
+    <main class="pt-[140px]">
       <slot />
     </main>
-
-    <div class="z-[10]">
-      <Footer />
-    </div>
   </body>
 </html>
-
-<style>
-  body {
-    font-family: sans-serif;
-    width: 100%;
-    overflow-x: hidden;
-    box-sizing: content-box;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-</style>
