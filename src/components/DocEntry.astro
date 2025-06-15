@@ -9,9 +9,11 @@ import Sidebar from "@/src/components/Sidebar/Sidebar.astro";
 interface Props {
   headings: MarkdownHeading[];
   sidebar: SidebarItem[];
+  category: string;
+  relatedContents?: RelatedContentItem[];
 }
 
-const { headings, sidebar } = Astro.props;
+const { headings, sidebar, category, relatedContents } = Astro.props;
 
 const toc = (headings ?? []).filter(
   (heading) => heading.depth > 1 && heading.depth <= 6,
@@ -19,81 +21,89 @@ const toc = (headings ?? []).filter(
 ---
 <div class="doc-container">
   {sidebar?.length > 0 ? (
-    <div class="doc-aside">
-      <div class="sidebar" transition:persist>
+    <div class="doc-aside ">
+      <div class="sidebar  mt-[32px]" transition:persist={category}>
         <Sidebar sidebar={sidebar} />
       </div>
       {toc.length > 0 ? (
         <div class="toc-container">
-          <TOC toc={toc} client:only="react" />
+            <TOC toc={toc} client:load relatedContents={relatedContents} />
         </div>
       ) : null}
     </div>
   ) : null}
-  <div class="
-					prose prose-zinc
-					astro-code
+  <div class="content-container">
+    <div class="
+						prose 
+						mx-auto mt-[32px] mb-[100px]
+						text-[16px] leading-[1.4]
+						text-[rgba(0,0,0,0.8)]
+						w-full
+						max-w-none
+						px-[16px] sm:px-[24px] md:px-[32px] lg:px-[48px]
+            
+						prose-headings:font-medium prose-headings:leading-tight prose-headings:relative prose-headings:scroll-mt-[80px]
+						prose-h1:text-[32px] prose-h1:mt-[48px] prose-h1:mb-[24px] prose-h1:first:mt-0
+						prose-h2:text-[24px] prose-h2:mt-[40px] prose-h2:mb-[20px]
+						prose-h3:text-[20px] prose-h3:mt-[32px] prose-h3:mb-[16px]
+						prose-h4:text-[18px] prose-h4:mt-[24px] prose-h4:mb-[12px]
+						prose-h5:text-[16px] prose-h5:mt-[20px] prose-h5:mb-[8px]
+						prose-h6:text-[14px] prose-h6:mt-[16px] prose-h6:mb-[8px]
 
-					max-w-[800px] mx-auto mt-[23px] mb-[100px]
-					text-[16px] leading-[1.4]
-					text-[rgba(0,0,0,0.8)]
+						prose-h1:text-[#000000]
+						prose-h2:text-[#000000]
+						prose-h3:text-[#000000]
+						prose-h4:text-[#000000]
+						prose-h5:text-[#000000]
+						prose-h6:text-[#000000]
 
-					prose-headings:font-medium prose-headings:leading-tight prose-headings:relative prose-headings:scroll-mt-[80px]
-					prose-h1:text-[32px] prose-h1:mt-[48px] prose-h1:mb-[24px] prose-h1:first:mt-0
-					prose-h2:text-[24px] prose-h2:mt-[40px] prose-h2:mb-[20px]
-					prose-h3:text-[20px] prose-h3:mt-[32px] prose-h3:mb-[16px]
-					prose-h4:text-[18px] prose-h4:mt-[24px] prose-h4:mb-[12px]
-					prose-h5:text-[16px] prose-h5:mt-[20px] prose-h5:mb-[8px]
-					prose-h6:text-[14px] prose-h6:mt-[16px] prose-h6:mb-[8px]
+						prose-p:my-[12px] prose-p:leading-[1.4]
 
-					prose-h1:text-[#000000]
-					prose-h2:text-[#000000]
-					prose-h3:text-[#000000]
-					prose-h4:text-[#000000]
-					prose-h5:text-[#000000]
-					prose-h6:text-[#000000]
+						prose-a:text-[#0879E0] prose-a:no-underline hover:prose-a:underline
+						prose-a:font-medium prose-a:transition-all
 
-					prose-p:my-[20px] prose-p:leading-[1.6]
+						prose-strong:text-[#000]
+						prose-strong:font-semibold
+						prose-em:italic prose-em:text-inherit
 
-					prose-a:text-[#0879E0] prose-a:no-underline hover:prose-a:underline
-					prose-a:font-medium prose-a:transition-all
+						prose-blockquote:border-l- prose-blockquote:border-[rgba(0,0,0,0.1)]
+						prose-blockquote:pl-[20px] prose-blockquote:italic
+						prose-blockquote:my-[32px] prose-blockquote:text-[rgba(0,0,0,0.6)]
+						prose-blockquote:leading-[1.6]
+						prose-blockquote:text-[14px]
+						prose-blockquote:font-normal
 
-					prose-strong:text-[#000]
-					prose-strong:font-semibold
-					prose-em:italic prose-em:text-inherit
+						prose-ul:my-[16px] prose-ul:pl-[24px]
+						prose-ol:my-[16px] prose-ol:pl-[24px]
+						prose-li:my-[8px] prose-li:leading-[1.4]
 
-					prose-blockquote:border-l- prose-blockquote:border-[rgba(0,0,0,0.1)]
-					prose-blockquote:pl-[20px] prose-blockquote:italic
-					prose-blockquote:my-[32px] prose-blockquote:text-[rgba(0,0,0,0.6)]
-					prose-blockquote:leading-[1.6]
-					prose-blockquote:text-[14px]
-					prose-blockquote:font-normal
+						prose-code:py-[2px] prose-code:rounded-[4px]
+						prose-code:font-mono
+						prose-code:text-[13px] prose-code:font-normal
+						prose-code:before:content-none prose-code:after:content-none
 
-					prose-ul:my-[16px] prose-ul:pl-[24px]
-					prose-ol:my-[16px] prose-ol:pl-[24px]
-					prose-li:my-[8px] prose-li:leading-[1.4]
+						prose-pre:bg-[#ffffff] prose-pre:text-[#f9fafb] prose-pre:p-[20px]
+						prose-pre:rounded-[12px] prose-pre:my-[24px]
+						prose-pre:text-[14px] prose-pre:leading-[1.4]
+            prose-pre:border prose-pre:border-[rgba(0,0,0,0.1)]
+            prose-pre:max-w-[calc(100vw-32px)]
+            [&_pre]:overflow-x-scroll [&_pre]:whitespace-pre
+            [&_pre]:scrollbar-thin [&_pre]:scrollbar-track-transparent
+            [&_pre]:scrollbar-thumb-gray-300
 
-					prose-code:py-[2px] prose-code:rounded-[4px]
-					prose-code:font-mono
-					prose-code:text-[13px] prose-code:font-normal
-					prose-code:before:content-none prose-code:after:content-none
+						prose-img:rounded-[8px] prose-img:my-[32px] prose-img:shadow-lg
+						prose-img:w-full prose-img:h-auto
 
-					prose-pre:bg-[#1f2937] prose-pre:text-[#f9fafb] prose-pre:p-[20px]
-					prose-pre:rounded-[8px] prose-pre:overflow-x-auto prose-pre:my-[24px]
-					prose-pre:text-[14px] prose-pre:leading-[1.5]
+						prose-table:my-[32px] prose-table:w-full prose-table:border-collapse
+						prose-th:border prose-th:border-[rgba(0,0,0,0.1)] prose-th:p-[12px]
+						prose-th:bg-[rgba(0,0,0,0.02)] prose-th:font-semibold prose-th:text-left
+						prose-td:border prose-td:border-[rgba(0,0,0,0.1)] prose-td:p-[12px]
 
-					prose-img:rounded-[8px] prose-img:my-[32px] prose-img:shadow-lg
-					prose-img:w-full prose-img:h-auto
-
-					prose-table:my-[32px] prose-table:w-full prose-table:border-collapse
-					prose-th:border prose-th:border-[rgba(0,0,0,0.1)] prose-th:p-[12px]
-					prose-th:bg-[rgba(0,0,0,0.02)] prose-th:font-semibold prose-th:text-left
-					prose-td:border prose-td:border-[rgba(0,0,0,0.1)] prose-td:p-[12px]
-
-					prose-hr:my-[48px] prose-hr:border-t prose-hr:border-[rgba(0,0,0,0.1)]
-					[&_.heading-anchor]:text-inherit [&_.heading-anchor]:no-underline
-					">
-    <slot />
+						prose-hr:my-[48px] prose-hr:border-t prose-hr:border-[rgba(0,0,0,0.1)]
+						
+						">
+      <slot />
+    </div>
   </div>
 </div>
 
@@ -103,90 +113,119 @@ const toc = (headings ?? []).filter(
     grid-template-areas: "sidebar content toc";
     grid-template-columns: minmax(0, 2fr) minmax(0, 6fr) minmax(0, 2fr);
     width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 16px 0;
+    min-height: 100vh; /* Allow natural page scrolling */
   }
+  
   .doc-aside {
     display: contents;
   }
+  
   .sidebar {
     grid-area: sidebar;
-    position: sticky;
-    top: 0;
+    position: fixed; /* Fixed positioning for independent scrolling */
+    top: 120px; /* Account for header height */
+    left: 0;
+    width: calc((100vw - 1440px) / 2 + 1440px * 2 / 10); /* Calculate sidebar width */
+    max-width: 280px;
+    height: calc(100vh - 120px);
     padding: 0 16px;
-    height: 100vh;
-    overflow-y: auto;
+    overflow-y: auto; /* Independent scrolling for sidebar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    z-index: 10;
   }
 
-  .toc-container {
-    grid-area: toc;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow: auto;
+  
+  .sidebar::-webkit-scrollbar {
+    width: 6px;
   }
+
+  .sidebar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+  }
+
   .content-container {
     grid-area: content;
+    /* Remove height and overflow constraints - let it scroll naturally with the page */
     opacity: 1;
     transition: opacity 0.2s ease-in-out;
   }
+
   .content-container:global(.astro-transition-fade) {
     opacity: 0;
   }
 
-  @media (max-width: 960px) {
-    .doc-container {
-      display: grid;
-      grid-template-areas:
-        "sidebar toc"
-        "sidebar content";
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 3fr);
-      grid-template-rows: auto 1fr;
+  .toc-container {
+    grid-area: toc;
+    position: fixed; /* Fixed positioning for independent scrolling */
+    top: 120px; /* Account for header height */
+    right: 0;
+    width: calc((100vw - 1440px) / 2 + 1440px * 2 / 10); /* Calculate TOC width */
+    max-width: 280px;
+    height: calc(100vh - 120px);
+    overflow-y: auto; /* Independent scrolling for TOC */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    z-index: 10;
+  }
+
+  .toc-container::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .toc-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .toc-container::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+  }
+
+  /* Better responsive calculation for larger screens */
+  @media (min-width: 1440px) {
+    .sidebar {
+      left: calc((100vw - 1440px) / 2);
+      width: calc(1440px * 2 / 10);
     }
-    .content-container {
-      position: unset;
-    }
+    
     .toc-container {
-      height: 32px;
-      overflow: hidden;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: #fff;
-      opacity: 1;
-      width: 100%;
-      display: flex;
-      justify-content: flex-end;
+      right: calc((100vw - 1440px) / 2);
+      width: calc(1440px * 2 / 10);
     }
   }
-  @media (max-width: 480px) {
+
+  /* Mobile responsive adjustments */
+  @media (max-width: 1023px) {
     .doc-container {
-      display: flex;
-      flex-direction: column;
-    }
-    .doc-aside {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      height: 32px;
-      inset: 0;
-      z-index: 100;
-      opacity: 1;
-      background: #fff;
-      padding: 8px 16px;
-    }
-    .toc-container {
-      position: unset;
-      display: flex;
-      justify-content: flex-end;
-    }
-    .sidebar {
-      position: unset;
-      height: fit-content;
+      grid-template-areas: "content";
+      grid-template-columns: 1fr;
+      min-height: auto;
+      max-width: 100%;
       padding: 0;
     }
+    
+    .sidebar {
+      display: none;
+    }
+    
     .content-container {
-      position: unset;
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .toc-container {
+      display: none;
     }
   }
 </style>

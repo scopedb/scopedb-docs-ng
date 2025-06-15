@@ -4,6 +4,7 @@ import Layout from "@/src/layouts/Layout.astro";
 import { referenceSidebar } from "@/src/content/sidebar";
 import { getCollection, getEntry } from "astro:content";
 import { resolveTitle } from "@/src/libs/title";
+import DocsFooter from "@/src/components/DocsFooter.astro";
 
 export async function getStaticPaths() {
   const docs = await getCollection("reference");
@@ -26,8 +27,14 @@ const { Content, headings } = await entry.render();
 const title = resolveTitle(entry.data.title, headings);
 ---
 
-<Layout title={title}>
-  <DocEntry headings={headings} sidebar={sidebar}>
+<Layout title={title} sidebar={sidebar}>
+  <DocEntry
+    headings={headings}
+    sidebar={sidebar}
+    category="reference"
+    relatedContents={entry.data.relatedContents}
+  >
     <Content />
+    <DocsFooter />
   </DocEntry>
 </Layout>

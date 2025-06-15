@@ -4,11 +4,13 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { throttle } from "lodash-es";
 import { useMedia, useScrollLock } from "@/src/libs/hooks";
 import { AlignLeftIcon } from "lucide-react";
+import RelatedContent, { type RelatedContentItem } from "../RelatedContent";
 
 import styles from "./index.module.css";
 
 interface TOCProps {
   toc: MarkdownHeading[];
+  relatedContents?: RelatedContentItem[];
 }
 
 interface TocItemProps {
@@ -26,7 +28,7 @@ interface LinkInfo {
   index: number;
 }
 
-type OffsetTarget = Window | Document | HTMLElement;
+type OffsetTarget = Window | Document | HTMLElement | Element;
 
 const SCROLL_THROTTLE_MS = 128;
 const TOP_BOUND = 12;
@@ -41,10 +43,12 @@ function getOffset(
   height: number;
 } {
   const { top: elTop, height } = el.getBoundingClientRect();
-  const scrollTargetTop =
-    scrollTarget instanceof HTMLElement
-      ? scrollTarget.getBoundingClientRect().top
-      : 0;
+  let scrollTargetTop = 0;
+
+  if (scrollTarget instanceof HTMLElement || scrollTarget instanceof Element) {
+    scrollTargetTop = scrollTarget.getBoundingClientRect().top;
+  }
+
   return {
     top: elTop - scrollTargetTop,
     height,
@@ -59,6 +63,15 @@ function useTOCState(toc: MarkdownHeading[]) {
   const tocListRef = useRef<HTMLUListElement>(null);
 
   const collectedLinkHrefs = useMemo(() => toc.map((t) => t.slug), [toc]);
+
+  useEffect(() => {
+    const hash = window.location.hash.replaceAll("#", "");
+    if (hash) {
+      setActiveHref(hash);
+    } else if (toc[0]?.slug) {
+      setActiveHref(toc[0].slug);
+    }
+  }, [toc]);
 
   return {
     activeHref,
@@ -122,8 +135,13 @@ function useTOCScroll(
   );
 
   useEffect(() => {
+    const cleanup = () => {
+      throttledHandleScroll.cancel();
+      window.removeEventListener("scroll", throttledHandleScroll);
+    };
+
     window.addEventListener("scroll", throttledHandleScroll);
-    return () => window.removeEventListener("scroll", throttledHandleScroll);
+    return cleanup;
   }, [throttledHandleScroll]);
 
   return throttledHandleScroll;
@@ -137,29 +155,44 @@ function useTOCInitialization(
   setActiveLink: (link: LinkInfo | null) => void,
 ) {
   useEffect(() => {
-    if (toc.length > 0 && !activeHref) {
-      const firstHref = toc[0].slug;
-      setActiveHref(firstHref);
-      const firstLink = document.getElementById(firstHref);
-      if (firstLink) {
-        const { top, height } = getOffset(firstLink, document);
-        setActiveLink({
-          top,
-          height,
-          href: firstHref,
-          index: 0,
-        });
+    const initialize = () => {
+      const hash = window.location.hash.replaceAll("#", "");
+      if (hash && collectedLinkHrefs.includes(hash)) {
+        setActiveHref(hash);
+        const linkEl = document.getElementById(hash);
+        if (linkEl) {
+          const { top, height } = getOffset(linkEl, document);
+          setActiveLink({
+            top,
+            height,
+            href: hash,
+            index: collectedLinkHrefs.indexOf(hash),
+          });
+        }
+        return;
       }
-    }
 
-    const hash = window.location.hash.replaceAll("#", "");
-    if (hash && collectedLinkHrefs.includes(hash)) {
-      setActiveHref(hash);
-    }
+      if (toc.length > 0 && !activeHref) {
+        const firstHref = toc[0].slug;
+        setActiveHref(firstHref);
+        const firstLink = document.getElementById(firstHref);
+        if (firstLink) {
+          const { top, height } = getOffset(firstLink, document);
+          setActiveLink({
+            top,
+            height,
+            href: firstHref,
+            index: 0,
+          });
+        }
+      }
+    };
+
+    initialize();
   }, [toc, collectedLinkHrefs, activeHref, setActiveHref, setActiveLink]);
 }
 
-export function TOCItem({
+export const TOCItem = React.memo(function TOCItem({
   item,
   isActive,
   onClick,
@@ -180,15 +213,15 @@ export function TOCItem({
         title={item.text}
         href={`#${item.slug}`}
         onClick={handleClick}
-        style={{ paddingLeft: `${(item.depth - 2) * 16}px` }}
+        style={{ marginLeft: `${(item.depth - 2) * 16}px` }}
       >
         {item.text}
       </a>
     </li>
   );
-}
+});
 
-export function TOC({ toc }: TOCProps) {
+export function TOC({ toc, relatedContents }: TOCProps) {
   const {
     activeHref,
     setActiveHref,
@@ -251,6 +284,8 @@ export function TOC({ toc }: TOCProps) {
         <AlignLeftIcon onClick={toggleOpen} width={16} height={16} />
       )}
       {isOpen && <div className={styles.tocMask} onClick={toggleOpen} />}
+
+      <RelatedContent relatedContents={relatedContents} />
       <div
         className={`${isMobile ? (isOpen ? styles.open : styles.close) : ""}`}
       >

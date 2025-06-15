@@ -1,11 +1,11 @@
 import type { SidebarItem } from "@/src/libs/sidebar";
-import styles from "./index.module.css";
 import React, { useMemo, useState, useCallback, useEffect } from "react";
 import { useMedia, useScrollLock } from "@/src/libs/hooks";
 import { ChevronDown, ChevronRight, ListMinusIcon } from "lucide-react";
 
 interface Props {
   sidebar: SidebarItem[];
+  currentPath: string;
 }
 
 interface SidebarItemProps {
@@ -15,7 +15,6 @@ interface SidebarItemProps {
   collapsedStates: Record<string, boolean>;
   // eslint-disable-next-line no-unused-vars
   onToggleCollapsed: (key: string) => void;
-  closeSidebarMenu?: () => void;
 }
 
 interface SidebarGroupProps {
@@ -25,11 +24,10 @@ interface SidebarGroupProps {
   collapsedStates: Record<string, boolean>;
   // eslint-disable-next-line no-unused-vars
   onToggleCollapsed: (key: string) => void;
-  closeSidebarMenu?: () => void;
 }
 
-function useCurrentPath() {
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+function useCurrentPath(initPathname: string) {
+  const [currentPath, setCurrentPath] = useState(initPathname);
 
   useEffect(() => {
     const handleRouteChange = () => {
@@ -48,10 +46,13 @@ function useCurrentPath() {
   return currentPath;
 }
 
+// Hook: Manage collapsed states
 function useCollapsedStates(initialItems: SidebarItem[]) {
   const [collapsedStates, setCollapsedStates] = useState<
     Record<string, boolean>
-  >(() => {
+  >({});
+
+  useEffect(() => {
     const initialState: Record<string, boolean> = {};
     const processItems = (items: SidebarItem[], depth = 0) => {
       items.forEach((item) => {
@@ -65,8 +66,8 @@ function useCollapsedStates(initialItems: SidebarItem[]) {
       });
     };
     processItems(initialItems);
-    return initialState;
-  });
+    setCollapsedStates(initialState);
+  }, [initialItems]);
 
   const toggleCollapsed = useCallback((key: string) => {
     setCollapsedStates((prev) => {
@@ -79,9 +80,11 @@ function useCollapsedStates(initialItems: SidebarItem[]) {
   return { collapsedStates, toggleCollapsed };
 }
 
+// Utility: Normalize URL paths
 const normalizePath = (path: string) =>
   path.split("/").filter(Boolean).join("/");
 
+// Utility: Check if menu item is active
 const isActive = (item: SidebarItem, pathname: string) => {
   const currentPath = normalizePath(pathname);
   const itemPath = item.link ? normalizePath(item.link) : "";
@@ -104,13 +107,13 @@ const isActive = (item: SidebarItem, pathname: string) => {
   return itemPath === currentPath;
 };
 
+// Component: Individual menu item (group or link)
 const SidebarMenuItem = React.memo(function SidebarMenuItem({
   item,
   depth,
   currentPath,
   collapsedStates,
   onToggleCollapsed,
-  closeSidebarMenu,
 }: SidebarItemProps) {
   const isGroup = Boolean(item.items?.length);
   const itemKey = item.link || item.label || `item-${depth}`;
@@ -118,18 +121,19 @@ const SidebarMenuItem = React.memo(function SidebarMenuItem({
   const isItemActive = isActive(item, currentPath);
   const paddingLeft = 16 + depth * 16;
 
+  // Render: Group button with expand/collapse
   if (isGroup) {
     return (
       <div>
         <button
           type="button"
-          className={`${styles.groupItem} ${isItemActive ? styles.active : ""}`}
+          className={`flex items-center text-[14px] justify-between rounded-[12px] w-full py-[8px] px-[12px] mb-[6px] border-none bg-transparent cursor-pointer text-inherit text-left transition-colors duration-200 font-medium ${isItemActive ? "bg-[rgba(0,0,0,0.04)] text-[var(--text-primary)] font-medium" : "hover:bg-[rgba(0,0,0,0.02)] hover:text-[var(--text-primary)]"}`}
           style={{ paddingLeft }}
           onClick={() => onToggleCollapsed(itemKey)}
           aria-expanded={!collapsed}
         >
-          <span className={styles.groupLabel}>{item.label}</span>
-          <span className={styles.groupArrow}>
+          <span className="flex-1">{item.label}</span>
+          <span className="flex items-center ml-[4px]">
             {collapsed ? (
               <ChevronRight width={16} height={16} />
             ) : (
@@ -139,15 +143,14 @@ const SidebarMenuItem = React.memo(function SidebarMenuItem({
         </button>
         {!collapsed && item.items && item.items.length > 0 && (
           <div>
-            {item.items.map((child, idx) => (
+            {item.items.map((child) => (
               <SidebarMenuItem
-                key={child.link || child.label || idx}
+                key={`${child.link}-${child.label}`}
                 item={child}
                 depth={depth + 1}
                 currentPath={currentPath}
                 collapsedStates={collapsedStates}
                 onToggleCollapsed={onToggleCollapsed}
-                closeSidebarMenu={closeSidebarMenu}
               />
             ))}
           </div>
@@ -156,30 +159,30 @@ const SidebarMenuItem = React.memo(function SidebarMenuItem({
     );
   }
 
+  // Render: Single navigation link
   return (
     <a
       href={item.link}
-      className={`${styles.singleItem} ${isItemActive ? styles.active : ""} is-leaf`}
+      className={`block min-h-[32px] leading-[32px] py-[4px] px-[8px] mb-[2px] font-normal text-[var(---text-secondary)] text-[14px] no-underline rounded-[12px] duration-200 break-all whitespace-normal ${isItemActive ? "bg-[rgba(0,0,0,0.04)] text-[var(--text-primary)] font-medium " : "hover:bg-[rgba(0,0,0,0.02)] hover:text-[var(--text-primary)]"}`}
       style={{ paddingLeft }}
       data-astro-prefetch
-      onClick={closeSidebarMenu}
     >
       {item.label}
     </a>
   );
 });
 
+// Component: Sidebar container
 const SidebarGroup = React.memo(function SidebarGroup({
   items,
   classNames,
   currentPath,
   collapsedStates,
   onToggleCollapsed,
-  closeSidebarMenu,
 }: SidebarGroupProps) {
   return (
     <aside className={classNames}>
-      <nav>
+      <nav className="space-y-[4px] p-[0px] pb-[24px]">
         {items.map((item, index) => (
           <SidebarMenuItem
             key={`${item.link}${index}`}
@@ -188,7 +191,6 @@ const SidebarGroup = React.memo(function SidebarGroup({
             currentPath={currentPath}
             collapsedStates={collapsedStates}
             onToggleCollapsed={onToggleCollapsed}
-            closeSidebarMenu={closeSidebarMenu}
           />
         ))}
       </nav>
@@ -196,94 +198,86 @@ const SidebarGroup = React.memo(function SidebarGroup({
   );
 });
 
-function Breadcrumbs() {
-  const currentPath = useCurrentPath();
+// Component: Mobile breadcrumb navigation
+function Breadcrumbs(props: { currentPath: string }) {
+  const { currentPath } = props;
 
   const crumbs = useMemo(() => {
-    const getVisibleSegments = (segments: string[], count: number) => {
-      const startIndex = Math.max(0, segments.length - count);
-      return {
-        startIndex,
-        segments: segments.slice(startIndex),
-      };
-    };
+    const segments = currentPath.split("/").filter(Boolean);
+    const result = [];
+    let path = "";
 
-    const buildPaths = (segments: string[]) => {
-      const paths: string[] = [];
-      let currentPath = "";
+    for (const segment of segments) {
+      path += `/${segment}`;
+      result.push({ text: segment, link: path });
+    }
 
-      for (const segment of segments) {
-        currentPath = currentPath ? `${currentPath}/${segment}` : `/${segment}`;
-        paths.push(currentPath);
-      }
-
-      return paths;
-    };
-
-    const pathSegments = currentPath.split("/").filter(Boolean);
-
-    const { startIndex, segments: visibleSegments } = getVisibleSegments(
-      pathSegments,
-      2,
-    );
-
-    const allPaths = buildPaths(pathSegments);
-
-    const visiblePaths = allPaths.slice(startIndex);
-
-    return visibleSegments.map((segment, index) => ({
-      text: segment,
-      link: visiblePaths[index],
-    }));
+    return result;
   }, [currentPath]);
 
   return (
-    <span className={styles.breadcrumbs}>
+    <span className="pl-3 text-black/60 text-sm font-normal">
       {crumbs.map((crumb, index) => (
-        <React.Fragment key={crumb.link}>
-          {index > 0 && <span className={styles.breadcrumb}>/</span>}
-          <a href={crumb.link} className={styles.breadcrumb}>
+        <span key={crumb.link}>
+          <a href={crumb.link} className="hover:text-black">
             {crumb.text}
           </a>
-        </React.Fragment>
+          {index < crumbs.length - 1 && (
+            <span className="mx-1 text-gray-400"> / </span>
+          )}
+        </span>
       ))}
     </span>
   );
 }
 
-export function SidebarMenu({ sidebar: items }: Props) {
+// Main: Responsive sidebar menu
+export function SidebarMenu(props: Props) {
+  const { sidebar: items, currentPath: initPathname } = props;
   const isMobile = useMedia("(max-width: 480px)");
   const [open, setOpen] = useState(false);
-  const currentPath = useCurrentPath();
   const { collapsedStates, toggleCollapsed } = useCollapsedStates(items);
+  const currentPath = useCurrentPath(initPathname);
 
   useScrollLock(open);
 
+  const sidebarBaseClasses =
+    "overflow-scroll sticky top-0 left-0 w-full max-w-[300px] overflow-x-hidden bg-white overflow-y-auto pb-6";
+
   const mobileClassName = useMemo(() => {
     if (!isMobile) return "";
-    return open ? styles.visible : styles.hidden;
+    return isMobile
+      ? open
+        ? "opacity-100 visible bg-white w-[70%] h-full fixed inset-0 z-[1000] translate-x-0 transition-all duration-500 ease-in-out"
+        : "opacity-0 invisible -translate-x-full w-0 h-0 transition-all duration-500 ease-in-out"
+      : "";
   }, [isMobile, open]);
-
-  function closeSidebarMenu() {
-    setOpen(false);
-  }
 
   return (
     <div>
-      {open && <div className={styles.mask} onClick={() => setOpen(false)} />}
+      {isMobile && open && (
+        <div
+          className="absolute inset-0 bg-gray-400/50 backdrop-blur-sm transition-opacity duration-500"
+          onClick={() => setOpen(false)}
+        />
+      )}
       {isMobile && (
-        <div className={styles.menuActions}>
-          <ListMinusIcon onClick={() => setOpen(true)} width={16} height={16} />
-          <Breadcrumbs />
+        <div className="flex flex-row">
+          <ListMinusIcon
+            onClick={() => setOpen(true)}
+            width={16}
+            height={16}
+            className="cursor-pointer"
+          />
+          <Breadcrumbs currentPath={currentPath} />
         </div>
       )}
       <SidebarGroup
         items={items}
-        classNames={`${styles.sidebar} ${mobileClassName}`}
+        classNames={`${sidebarBaseClasses} ${mobileClassName}`}
         currentPath={currentPath}
         collapsedStates={collapsedStates}
         onToggleCollapsed={toggleCollapsed}
-        closeSidebarMenu={closeSidebarMenu}
       />
     </div>
   );
